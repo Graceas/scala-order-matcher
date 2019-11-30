@@ -14,20 +14,14 @@ class OrderMatcher(
   def start(): Unit = {
     Boot.log(s"Execute $instrument instrument")
 
-    Boot.log(orderBook.sellOrders.toString())
-    Boot.log(orderBook.buyOrders.toString())
-
     while (tick()) {
       // execute all orders
     }
-
-    Boot.log(orderBook.sellOrders.toString())
-    Boot.log(orderBook.buyOrders.toString())
   }
 
-  def getAskPrice: Int = orderBook.sellOrders.head.price
+  def getAskPrice: Option[Int] = getEntryFromOtherPull(OrderType.BUY).map(_.price)
 
-  def getBidPrice: Int = orderBook.buyOrders.head.price
+  def getBidPrice: Option[Int] = getEntryFromOtherPull(OrderType.SELL).map(_.price)
 
   def addOrder(order: Order): Boolean = {
     order.orderType match {
@@ -38,7 +32,16 @@ class OrderMatcher(
   }
 
   def cancelAllOrders(): Unit = {
+    // release user money and instruments balance
+    orderBook.sellOrders.foreach(e => {
+      updateClientInstrumentBalance(e._2, e._2.volume)
+    })
+    orderBook.buyOrders.foreach(e => {
+      updateClientBalance(e._2, e._2.price * e._2.volume)
+    })
 
+    orderBook.sellOrders.clear()
+    orderBook.buyOrders.clear()
   }
 
   private def tick(): Boolean = {
@@ -48,44 +51,31 @@ class OrderMatcher(
       return false
     }
 
-    Boot.log(s"$instrument: Ask=$getAskPrice, Bid=$getBidPrice, Delta=${getAskPrice - getBidPrice}")
-    trade(getEntry(OrderType.SELL))
+    Boot.log(s"$instrument: Ask=$getAskPrice, Bid=$getBidPrice, Spread=${(getAskPrice.getOrElse(0) - getBidPrice.getOrElse(0)).abs}")
+    trade(getEntryFromOtherPull(OrderType.BUY).get)
   }
 
   private def trade(order: Order): Boolean = {
-
     // get order from other pull
-    val otherOrder: Order = getEntry(order.orderType)
+    val otherOrder: Order = getEntryFromOtherPull(order.orderType).get
+    println(order, otherOrder)
     if (canTrade(order.orderType, order.price, otherOrder.price)) {
       val delta: Int = order.volume - otherOrder.volume
 
+      val tradeVolume: Int = if (delta <= 0) order.volume else otherOrder.volume
       // update users balances
-      order.client.balance += order.volume * order.price
-      otherOrder.client.instrumentBalances(instrument) += order.volume
-
-      if (delta < 0) { // sell order filled
-        // update volume for both orders
-        updateEntryVolume(order.orderType, 0)
-        updateEntryVolume(otherOrder.orderType, otherOrder.volume - order.volume)
-        // remove filled order
-        removeEntry(order.orderType)
+      updateClientBalance(order, tradeVolume * order.price)
+      updateClientInstrumentBalance(otherOrder, tradeVolume)
+      // update volume for both orders
+      updateEntryVolume(order, volume = -tradeVolume)
+      updateEntryVolume(otherOrder, volume = -tradeVolume)
+      if (order.volume == 0) {
+        // remove sell filled order
+        removeEntry(order)
       }
-
-      if (delta == 0) { // both orders filled
-        // update volume for both orders
-        updateEntryVolume(order.orderType, 0)
-        updateEntryVolume(otherOrder.orderType, 0)
-        //remove both filled orders
-        removeEntry(order.orderType)
-        removeEntry(otherOrder.orderType)
-      }
-
-      if (delta > 0) { // buy orders filled
-        // update volume for both orders
-        updateEntryVolume(order.orderType, order.volume - otherOrder.volume)
-        updateEntryVolume(otherOrder.orderType, 0)
-        // remove filled order
-        removeEntry(otherOrder.orderType)
+      if (otherOrder.volume == 0) {
+        // remove buy filled order
+        removeEntry(otherOrder)
       }
 
       true
@@ -94,45 +84,84 @@ class OrderMatcher(
     }
   }
 
-  private def canTrade(orderType: OrderType, orderPrice: Int, entryPrice: Int): Boolean =
-    if (orderType == OrderType.BUY)
-      orderPrice >= entryPrice
-    else
-      orderPrice <= entryPrice
-
-  private def getEntry(orderType: OrderType): Order =
-    if (orderType == OrderType.BUY)
-      orderBook.sellOrders.head
-    else
-      orderBook.buyOrders.head
-
-  private def updateEntryVolume(orderType: OrderType, volume: Int): Order =
+  private def canTrade(orderType: OrderType, orderPrice: Int, entryPrice: Int): Boolean = {
     if (orderType == OrderType.BUY) {
-      orderBook.buyOrders.update(0, orderBook.buyOrders.head.copy(volume = volume))
-      orderBook.buyOrders.head
+      orderPrice >= entryPrice
     } else {
-      orderBook.sellOrders.update(0, orderBook.sellOrders.head.copy(volume = volume))
-      orderBook.sellOrders.head
+      orderPrice <= entryPrice
     }
+  }
 
-  private def removeEntry(orderType: OrderType): Order =
-    if (orderType == OrderType.BUY)
-      orderBook.buyOrders.remove(0)
-    else
-      orderBook.sellOrders.remove(0)
+  private def getEntryFromOtherPull(orderType: OrderType): Option[Order] = {
+    if (orderType == OrderType.BUY) {
+      // sort by time asc, then price asc
+      orderBook.sellOrders
+        .values
+        .toList
+        .sortBy(_.orderTime)(Ordering[Long])
+        .sortBy(_.price)(Ordering[Int])
+        .headOption
+    } else {
+      // sort by time asc, then price desc
+      orderBook.buyOrders
+        .values
+        .toList
+        .sortBy(_.orderTime)(Ordering[Long])
+        .sortBy(_.price)(Ordering[Int].reverse)
+        .headOption
+    }
+  }
+
+  private def removeEntry(order: Order): Unit = {
+    if (order.orderType == OrderType.BUY) {
+      orderBook.buyOrders -= order.id
+    } else {
+      orderBook.sellOrders -= order.id
+    }
+  }
+
+  private def updateEntryVolume(order: Order, volume: Int): Unit = {
+    if (order.orderType == OrderType.BUY) {
+      orderBook.buyOrders(order.id).volume += volume
+    } else {
+      orderBook.sellOrders(order.id).volume += volume
+    }
+  }
+
+  private def updateClientBalance(order: Order, balance: Int): Unit = {
+    if (order.orderType == OrderType.BUY) {
+      orderBook.buyOrders(order.id).client.balance += balance
+    } else {
+      orderBook.sellOrders(order.id).client.balance += balance
+    }
+  }
+
+  private def updateClientInstrumentBalance(order: Order, balance: Int): Unit = {
+    if (order.orderType == OrderType.BUY) {
+      if (!orderBook.buyOrders(order.id).client.instrumentBalances.contains(instrument)) {
+        orderBook.buyOrders(order.id).client.instrumentBalances(instrument) = 0
+      }
+      orderBook.buyOrders(order.id).client.instrumentBalances(instrument) += balance
+    } else {
+      if (!orderBook.sellOrders(order.id).client.instrumentBalances.contains(instrument)) {
+        orderBook.sellOrders(order.id).client.instrumentBalances(instrument) = 0
+      }
+      orderBook.sellOrders(order.id).client.instrumentBalances(instrument) += balance
+    }
+  }
 
   private def addBuyOrder(order: Order): Boolean = {
     if (
       order.volume <= 0 ||
       order.price <= 0  ||
       order.instrument != instrument ||
-      order.client.balance < order.price * order.volume
+      order.client.balance < order.price * order.volume ||
+      orderBook.buyOrders.contains(order.id)
     ) {
       false
     } else {
-      // hold user balance
-      order.client.balance -= order.price * order.volume
-      orderBook.buyOrders.append(order)
+      orderBook.buyOrders(order.id) = order
+      updateClientBalance(order, -1 * order.price * order.volume)
 
       true
     }
@@ -144,13 +173,13 @@ class OrderMatcher(
       order.price <= 0  ||
       order.instrument != instrument ||
       !order.client.instrumentBalances.contains(order.instrument) ||
-      order.client.instrumentBalances(order.instrument) < order.volume
+      order.client.instrumentBalances(order.instrument) < order.volume ||
+      orderBook.sellOrders.contains(order.id)
     ) {
       false
     } else {
-      // hold user instrument balance
-      order.client.instrumentBalances(order.instrument) -= order.volume
-      orderBook.sellOrders.append(order)
+      orderBook.sellOrders(order.id) = order
+      updateClientInstrumentBalance(order, -1 * order.volume)
 
       true
     }

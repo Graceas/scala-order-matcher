@@ -114,7 +114,7 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
     orderMatcher.addOrder(order) should be (true)
   }
 
-  "Order" should "be accepted [SELL, negative price]" in {
+  "Order" should "be declined [SELL, negative price]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
     val client: Client = Client("A1", 1000, mutable.Map(InstrumentType.A -> 10))
     val order: Order = Order(
@@ -129,7 +129,7 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
     orderMatcher.addOrder(order) should be (false)
   }
 
-  "Order" should "be accepted [SELL, negative volume]" in {
+  "Order" should "be declined [SELL, negative volume]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
     val client: Client = Client("A1", 1000, mutable.Map(InstrumentType.A -> 10))
     val order: Order = Order(
@@ -141,6 +141,22 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
       orderTime  = System.currentTimeMillis()
     )
 
+    orderMatcher.addOrder(order) should be (false)
+  }
+
+  "Order" should "be declined [SELL, duplicate]" in {
+    val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
+    val client: Client = Client("A1", 1000, mutable.Map(InstrumentType.A -> 10))
+    val order: Order = Order(
+      client     = client,
+      orderType  = OrderType.BUY,
+      price      = 100,
+      volume     = 5,
+      instrument = InstrumentType.A,
+      orderTime  = System.currentTimeMillis()
+    )
+
+    orderMatcher.addOrder(order) should be (true)
     orderMatcher.addOrder(order) should be (false)
   }
 
@@ -174,6 +190,11 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
     orderMatcher.orderBook.sellOrders should be (empty)
     orderMatcher.orderBook.buyOrders should be (empty)
+
+    client.balance should be (500)
+    client.instrumentBalances(InstrumentType.A) should be (5)
+    client2.balance should be (1500)
+    client2.instrumentBalances(InstrumentType.A) should be (5)
   }
 
   "Orders" should "be full filled [price and volume equal (two SELL and one BUY)]" in {
@@ -217,6 +238,13 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
     orderMatcher.orderBook.sellOrders should be (empty)
     orderMatcher.orderBook.buyOrders should be (empty)
+
+    client.balance should be (0)
+    client.instrumentBalances(InstrumentType.A) should be (10)
+    client2.balance should be (1500)
+    client2.instrumentBalances(InstrumentType.A) should be (5)
+    client3.balance should be (1500)
+    client3.instrumentBalances(InstrumentType.A) should be (5)
   }
 
   "Orders" should "be full filled [price and volume equal (two SELL and five BUY)]" in {
@@ -257,6 +285,27 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
     orderMatcher.orderBook.sellOrders should be (empty)
     orderMatcher.orderBook.buyOrders should be (empty)
+
+    clients("B1").balance should be (500)
+    clients("B1").instrumentBalances(InstrumentType.A) should be (5)
+
+    clients("B2").balance should be (500)
+    clients("B2").instrumentBalances(InstrumentType.A) should be (5)
+
+    clients("B3").balance should be (500)
+    clients("B3").instrumentBalances(InstrumentType.A) should be (5)
+
+    clients("B4").balance should be (500)
+    clients("B4").instrumentBalances(InstrumentType.A) should be (5)
+
+    clients("B5").balance should be (500)
+    clients("B5").instrumentBalances(InstrumentType.A) should be (5)
+
+    clients("S1").balance should be (1500)
+    clients("S1").instrumentBalances(InstrumentType.A) should be (0)
+
+    clients("S2").balance should be (1000)
+    clients("S2").instrumentBalances(InstrumentType.A) should be (0)
   }
 
   "Orders" should "be part filled [price equal, SELL volume greater]" in {

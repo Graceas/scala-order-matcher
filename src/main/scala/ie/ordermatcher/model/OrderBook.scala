@@ -1,8 +1,8 @@
 package ie.ordermatcher.model
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 
 case class OrderBook(
-  buyOrders:  ListBuffer[Order] = ListBuffer.empty,
-  sellOrders: ListBuffer[Order] = ListBuffer.empty,
+  buyOrders:  mutable.Map[String, Order] = mutable.Map.empty,
+  sellOrders: mutable.Map[String, Order] = mutable.Map.empty,
 )

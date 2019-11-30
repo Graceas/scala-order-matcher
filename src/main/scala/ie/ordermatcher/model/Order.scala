@@ -10,7 +10,7 @@ case class Order(
   client:     Client,
   orderType:  OrderType,
   price:      Int,
-  volume:     Int,
+  var volume: Int,
   instrument: InstrumentType,
   orderTime:  Long = System.currentTimeMillis(),
 )

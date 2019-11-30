@@ -42,4 +42,16 @@ sbt test
 
 ## 3. Results
 
-Please check the 'result.txt' file
+Please check the 'result.txt' file after execute sbt run
+
+```
+C1	1196	103	240	760	320
+C2	3664	396	121	950	560
+C3	1304	125	4	0	0
+C4	2880	209	533	480	950
+C5	673	71	5	400	100
+C6	5523	438	317	100	0
+C7	412	46	2	790	0
+C8	3689	372	192	0	0
+C9	4902	380	186	0	280
+```

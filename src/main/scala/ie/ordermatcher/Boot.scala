@@ -1,6 +1,7 @@
 package ie.ordermatcher
 
 import ie.ordermatcher.helper.DataParser
+import ie.ordermatcher.model.{Client, Order}
 
 object Boot extends App {
 

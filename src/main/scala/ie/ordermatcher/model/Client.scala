@@ -1,4 +1,4 @@
-package ie.ordermatcher
+package ie.ordermatcher.model
 
 import ie.ordermatcher.types.InstrumentType.InstrumentType
 

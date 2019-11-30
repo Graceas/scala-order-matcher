@@ -1,10 +1,9 @@
 package ie.ordermatcher.model
 
 case class TradeEntry(
-  tradingTime: Long,
-  client:      Client,
-  client2:     Client,
+  tradingTime: Long = System.currentTimeMillis(),
   order:       Order,
+  order2:      Order,
   volume:      Int,
   price:       Int,
 )

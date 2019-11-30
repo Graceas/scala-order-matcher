@@ -1,6 +1,6 @@
 package ie.ordermatcher
 
-import ie.ordermatcher.model.{Order, OrderBook, OrderBookHistory}
+import ie.ordermatcher.model._
 import ie.ordermatcher.types.InstrumentType.InstrumentType
 import ie.ordermatcher.types.OrderType
 import ie.ordermatcher.types.OrderType.OrderType
@@ -77,6 +77,14 @@ class OrderMatcher(
         // remove buy filled order
         removeEntry(otherOrder)
       }
+
+      // add trade entry to history
+      orderBookHistory.tradeEntries.append(TradeEntry(
+        order   = order,
+        order2  = otherOrder,
+        volume  = tradeVolume,
+        price   = order.price,
+      ))
 
       true
     } else {

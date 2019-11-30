@@ -44,7 +44,7 @@ sbt test
 
 Please check the 'result.txt' file after execute sbt run
 
-If add all orders and process:
+If add all orders and process (`sbt "run async"`):
 
 ```
 C1	1309	103	240	760	320
@@ -58,7 +58,7 @@ C8	3747	372	192	0	0
 C9	5093	380	186	0	280
 ```
 
-If add single order and process:
+If add single order and process (`sbt run`):
 
 ```
 C1	2324	91	138	733	353

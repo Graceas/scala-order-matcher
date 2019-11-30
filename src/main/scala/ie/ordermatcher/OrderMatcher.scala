@@ -62,8 +62,10 @@ class OrderMatcher(
       val delta: Int = order.volume - otherOrder.volume
 
       val tradeVolume: Int = if (delta <= 0) order.volume else otherOrder.volume
+      val tradePrice: Int = List(order.price, otherOrder.price).max
+
       // update users balances
-      updateClientBalance(order, tradeVolume * order.price)
+      updateClientBalance(order, tradeVolume * tradePrice)
       updateClientInstrumentBalance(otherOrder, tradeVolume)
       // update volume for both orders
       updateEntryVolume(order, volume = -tradeVolume)

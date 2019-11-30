@@ -12,5 +12,5 @@ case class Order(
   price:      Int,
   volume:     Int,
   instrument: InstrumentType,
-  orderTime:  Long,
+  orderTime:  Long = System.currentTimeMillis(),
 )

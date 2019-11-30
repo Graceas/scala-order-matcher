@@ -22,22 +22,38 @@ object Boot extends App {
       new OrderMatcher(instrument, OrderBook(), OrderBookHistory())
     )
 
-    // add orders to order books
-    orderMatchers.foreach(orderMatcher => {
-      orders
-        .filter(order => order.instrument == orderMatcher.instrument)
-        .foreach(order => {
-          val status = if (orderMatcher.addOrder(order)) "accepted" else "declined"
-          log(s"${order.orderType} order by client ${order.client.name} is $status")
-        })
-    })
+    if (args.length > 0 && args(0) == "async") {
+      // add orders to order books
+      orderMatchers.foreach(orderMatcher => {
+        orders
+          .filter(order => order.instrument == orderMatcher.instrument)
+          .foreach(order => {
+            val status = if (orderMatcher.addOrder(order)) "accepted" else "declined"
+            log(s"${order.orderType} order by client ${order.client.name} is $status")
+          })
+      })
 
-    // run all matchers async
-    val futures = orderMatchers.map(orderMatcher => Future {
-      orderMatcher.start()
-    })
+      // run all matchers async
+      val futures = orderMatchers.map(orderMatcher => Future {
+        orderMatcher.start()
+      })
 
-    Await.result(Future.sequence(futures), Duration.Inf)
+      Await.result(Future.sequence(futures), Duration.Inf)
+    } else {
+      // add orders to order books and process
+      orderMatchers.foreach(orderMatcher => {
+        orders
+          .filter(order => order.instrument == orderMatcher.instrument)
+          .foreach(order => {
+            val status = orderMatcher.addOrder(order)
+            log(s"add ${order.orderType} order by client ${order.client.name} is $status")
+
+            if (status) {
+              orderMatcher.start()
+            }
+          })
+      })
+    }
 
     // cancel all orders for release clients funds
     orderMatchers.foreach(orderMatcher => orderMatcher.cancelAllOrders())

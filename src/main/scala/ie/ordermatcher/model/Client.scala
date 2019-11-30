@@ -2,8 +2,10 @@ package ie.ordermatcher.model
 
 import ie.ordermatcher.types.InstrumentType.InstrumentType
 
+import scala.collection.mutable
+
 case class Client(
   name:               String,
   var balance:        Int,
-  instrumentBalances: Map[InstrumentType, Int]
+  instrumentBalances: mutable.Map[InstrumentType, Int]
 )

@@ -3,6 +3,7 @@ package ie.ordermatcher.helper
 import ie.ordermatcher.types.{InstrumentType, OrderType}
 import ie.ordermatcher.model.{Client, Order}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
@@ -18,7 +19,7 @@ object DataParser {
       clients += Client(
         name               = clientDetails(0),
         balance            = clientDetails(1).toInt,
-        instrumentBalances = clientDetails
+        instrumentBalances = mutable.Map() ++ clientDetails
           .drop(2)
           .zip(InstrumentType.values)
           .map(value => value._2 -> value._1.toInt)

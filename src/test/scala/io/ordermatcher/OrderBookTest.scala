@@ -6,10 +6,12 @@ import ie.ordermatcher.types.{InstrumentType, OrderType}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
+import scala.collection.mutable
+
 class OrderBookTest extends AnyFlatSpec with Matchers {
   "Order" should "be declined [BUY, user.balance < price * volume]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client: Client = Client("A1", 10, Map.empty)
+    val client: Client = Client("A1", 10, mutable.Map.empty)
     val order: Order = Order(
       client     = client,
       orderType  = OrderType.BUY,
@@ -24,7 +26,7 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
   "Order" should "be declined [SELL, user.instrumentBalance < volume]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client: Client = Client("A1", 10, Map.empty)
+    val client: Client = Client("A1", 10, mutable.Map.empty)
     val order: Order = Order(
       client     = client,
       orderType  = OrderType.SELL,
@@ -39,7 +41,7 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
   "Order" should "be declined [SELL, order.instrument <> matcher.instrument]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client: Client = Client("A1", 10, Map(InstrumentType.B -> 999))
+    val client: Client = Client("A1", 10, mutable.Map(InstrumentType.B -> 999))
     val order: Order = Order(
       client     = client,
       orderType  = OrderType.SELL,
@@ -54,7 +56,7 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
   "Order" should "be accepted [BUY, user.balance >= price * volume]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client: Client = Client("A1", 1000, Map.empty)
+    val client: Client = Client("A1", 1000, mutable.Map.empty)
     val order: Order = Order(
       client     = client,
       orderType  = OrderType.BUY,
@@ -69,7 +71,7 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
   "Order" should "be declined [BUY, negative price]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client: Client = Client("A1", 1000, Map.empty)
+    val client: Client = Client("A1", 1000, mutable.Map.empty)
     val order: Order = Order(
       client     = client,
       orderType  = OrderType.BUY,
@@ -84,7 +86,7 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
   "Order" should "be declined [BUY, negative volume]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client: Client = Client("A1", 1000, Map.empty)
+    val client: Client = Client("A1", 1000, mutable.Map.empty)
     val order: Order = Order(
       client     = client,
       orderType  = OrderType.BUY,
@@ -99,7 +101,7 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
   "Order" should "be accepted [SELL, user.instrumentBalance >= volume]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client: Client = Client("A1", 1000, Map(InstrumentType.A -> 10))
+    val client: Client = Client("A1", 1000, mutable.Map(InstrumentType.A -> 10))
     val order: Order = Order(
       client     = client,
       orderType  = OrderType.BUY,
@@ -114,7 +116,7 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
   "Order" should "be accepted [SELL, negative price]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client: Client = Client("A1", 1000, Map(InstrumentType.A -> 10))
+    val client: Client = Client("A1", 1000, mutable.Map(InstrumentType.A -> 10))
     val order: Order = Order(
       client     = client,
       orderType  = OrderType.BUY,
@@ -129,7 +131,7 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
   "Order" should "be accepted [SELL, negative volume]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client: Client = Client("A1", 1000, Map(InstrumentType.A -> 10))
+    val client: Client = Client("A1", 1000, mutable.Map(InstrumentType.A -> 10))
     val order: Order = Order(
       client     = client,
       orderType  = OrderType.BUY,
@@ -144,8 +146,8 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
   "Orders" should "be full filled [price and volume equal]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client:  Client = Client("A1", 1000, Map.empty)
-    val client2: Client = Client("A2", 1000, Map(InstrumentType.A -> 10))
+    val client:  Client = Client("A1", 1000, mutable.Map.empty)
+    val client2: Client = Client("A2", 1000, mutable.Map(InstrumentType.A -> 10))
 
     val order: Order = Order(
       client     = client,
@@ -176,9 +178,9 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
 
   "Orders" should "be full filled [price and volume equal (two SELL and one BUY)]" in {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
-    val client:  Client = Client("A1", 1000, Map.empty)
-    val client2: Client = Client("A2", 1000, Map(InstrumentType.A -> 10))
-    val client3: Client = Client("A3", 1000, Map(InstrumentType.A -> 10))
+    val client:  Client = Client("A1", 1000, mutable.Map.empty)
+    val client2: Client = Client("A2", 1000, mutable.Map(InstrumentType.A -> 10))
+    val client3: Client = Client("A3", 1000, mutable.Map(InstrumentType.A -> 10))
 
     val order: Order = Order(
       client     = client,
@@ -221,14 +223,14 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
     val clients: Map[String, Client] = Map(
       // buy
-      "B1" -> Client("B1", 1000, Map.empty),
-      "B2" -> Client("B2", 1000, Map.empty),
-      "B3" -> Client("B3", 1000, Map.empty),
-      "B4" -> Client("B4", 1000, Map.empty),
-      "B5" -> Client("B5", 1000, Map.empty),
+      "B1" -> Client("B1", 1000, mutable.Map.empty),
+      "B2" -> Client("B2", 1000, mutable.Map.empty),
+      "B3" -> Client("B3", 1000, mutable.Map.empty),
+      "B4" -> Client("B4", 1000, mutable.Map.empty),
+      "B5" -> Client("B5", 1000, mutable.Map.empty),
       // sell
-      "S1" -> Client("S1", 0, Map(InstrumentType.A -> 15)),
-      "S2" -> Client("S2", 0, Map(InstrumentType.A -> 10))
+      "S1" -> Client("S1", 0, mutable.Map(InstrumentType.A -> 15)),
+      "S2" -> Client("S2", 0, mutable.Map(InstrumentType.A -> 10))
     )
 
     val orders: Map[String, Order] = Map(
@@ -261,14 +263,14 @@ class OrderBookTest extends AnyFlatSpec with Matchers {
     val orderMatcher: OrderMatcher = new OrderMatcher(InstrumentType.A, OrderBook(), OrderBookHistory())
     val clients: Map[String, Client] = Map(
       // buy
-      "B1" -> Client("B1", 1000, Map.empty),
-      "B2" -> Client("B2", 1000, Map.empty),
-      "B3" -> Client("B3", 1000, Map.empty),
-      "B4" -> Client("B4", 1000, Map.empty),
-      "B5" -> Client("B5", 1000, Map.empty),
+      "B1" -> Client("B1", 1000, mutable.Map.empty),
+      "B2" -> Client("B2", 1000, mutable.Map.empty),
+      "B3" -> Client("B3", 1000, mutable.Map.empty),
+      "B4" -> Client("B4", 1000, mutable.Map.empty),
+      "B5" -> Client("B5", 1000, mutable.Map.empty),
       // sell
-      "S1" -> Client("S1", 0, Map(InstrumentType.A -> 15)),
-      "S2" -> Client("S2", 0, Map(InstrumentType.A -> 30))
+      "S1" -> Client("S1", 0, mutable.Map(InstrumentType.A -> 15)),
+      "S2" -> Client("S2", 0, mutable.Map(InstrumentType.A -> 30))
     )
 
     val orders: Map[String, Order] = Map(

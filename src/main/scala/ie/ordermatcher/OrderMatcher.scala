@@ -37,6 +37,10 @@ class OrderMatcher(
     }
   }
 
+  def cancelAllOrders(): Unit = {
+
+  }
+
   private def tick(): Boolean = {
 
     if (orderBook.sellOrders.isEmpty || orderBook.buyOrders.isEmpty) {
@@ -44,7 +48,7 @@ class OrderMatcher(
       return false
     }
 
-    Boot.log(s"$instrument: Ask=$getAskPrice, Bid=$getBidPrice")
+    Boot.log(s"$instrument: Ask=$getAskPrice, Bid=$getBidPrice, Delta=${getAskPrice - getBidPrice}")
     trade(getEntry(OrderType.SELL))
   }
 
@@ -55,31 +59,32 @@ class OrderMatcher(
     if (canTrade(order.orderType, order.price, otherOrder.price)) {
       val delta: Int = order.volume - otherOrder.volume
 
+      // update users balances
+      order.client.balance += order.volume * order.price
+      otherOrder.client.instrumentBalances(instrument) += order.volume
+
       if (delta < 0) { // sell order filled
         // update volume for both orders
-
         updateEntryVolume(order.orderType, 0)
         updateEntryVolume(otherOrder.orderType, otherOrder.volume - order.volume)
-
+        // remove filled order
         removeEntry(order.orderType)
       }
 
       if (delta == 0) { // both orders filled
         // update volume for both orders
-
         updateEntryVolume(order.orderType, 0)
         updateEntryVolume(otherOrder.orderType, 0)
-
+        //remove both filled orders
         removeEntry(order.orderType)
         removeEntry(otherOrder.orderType)
       }
 
       if (delta > 0) { // buy orders filled
         // update volume for both orders
-
         updateEntryVolume(order.orderType, order.volume - otherOrder.volume)
         updateEntryVolume(otherOrder.orderType, 0)
-
+        // remove filled order
         removeEntry(otherOrder.orderType)
       }
 
@@ -125,6 +130,8 @@ class OrderMatcher(
     ) {
       false
     } else {
+      // hold user balance
+      order.client.balance -= order.price * order.volume
       orderBook.buyOrders.append(order)
 
       true
@@ -141,6 +148,8 @@ class OrderMatcher(
     ) {
       false
     } else {
+      // hold user instrument balance
+      order.client.instrumentBalances(order.instrument) -= order.volume
       orderBook.sellOrders.append(order)
 
       true

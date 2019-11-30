@@ -12,7 +12,7 @@ src_managed/
 project/boot/
 project/plugins/project/
 
-resources/data/task.md
+src/main/resources/data/task.md
 
 # Scala-IDE specific
 .idea/

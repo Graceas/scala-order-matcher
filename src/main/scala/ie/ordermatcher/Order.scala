@@ -2,8 +2,8 @@ package ie.ordermatcher
 
 import java.util.UUID
 
-import ie.ordermatcher.InstrumentType.InstrumentType
-import ie.ordermatcher.OrderType.OrderType
+import ie.ordermatcher.types.InstrumentType.InstrumentType
+import ie.ordermatcher.types.OrderType.OrderType
 
 case class Order(
   id:         String = UUID.randomUUID.toString,

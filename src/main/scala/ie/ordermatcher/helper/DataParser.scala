@@ -1,6 +1,7 @@
 package ie.ordermatcher.helper
 
-import ie.ordermatcher.{Client, InstrumentType, Order, OrderType}
+import ie.ordermatcher.types.{InstrumentType, OrderType}
+import ie.ordermatcher.{Client, Order}
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source

@@ -1,4 +1,4 @@
-package ie.ordermatcher
+package ie.ordermatcher.types
 
 object InstrumentType extends Enumeration {
   type InstrumentType = Value

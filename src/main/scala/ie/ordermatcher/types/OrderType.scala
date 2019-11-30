@@ -1,4 +1,4 @@
-package ie.ordermatcher
+package ie.ordermatcher.types
 
 object OrderType extends Enumeration {
   type OrderType   = Value

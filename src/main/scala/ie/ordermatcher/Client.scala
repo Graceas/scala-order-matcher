@@ -1,6 +1,6 @@
 package ie.ordermatcher
 
-import ie.ordermatcher.InstrumentType.InstrumentType
+import ie.ordermatcher.types.InstrumentType.InstrumentType
 
 case class Client(
   name:               String,

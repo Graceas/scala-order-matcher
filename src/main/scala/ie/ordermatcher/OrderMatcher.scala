@@ -58,7 +58,6 @@ class OrderMatcher(
   private def trade(order: Order): Boolean = {
     // get order from other pull
     val otherOrder: Order = getEntryFromOtherPull(order.orderType).get
-    println(order, otherOrder)
     if (canTrade(order.orderType, order.price, otherOrder.price)) {
       val delta: Int = order.volume - otherOrder.volume
 
@@ -106,7 +105,7 @@ class OrderMatcher(
       orderBook.sellOrders
         .values
         .toList
-        .sortBy(_.orderTime)(Ordering[Long])
+        .sortBy(order => order.nonce + order.orderTime)(Ordering[Long])
         .sortBy(_.price)(Ordering[Int])
         .headOption
     } else {
@@ -114,7 +113,7 @@ class OrderMatcher(
       orderBook.buyOrders
         .values
         .toList
-        .sortBy(_.orderTime)(Ordering[Long])
+        .sortBy(order => order.nonce + order.orderTime)(Ordering[Long])
         .sortBy(_.price)(Ordering[Int].reverse)
         .headOption
     }

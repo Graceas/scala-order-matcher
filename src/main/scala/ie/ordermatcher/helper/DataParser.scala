@@ -44,8 +44,7 @@ object DataParser {
         orderType  = if (orderDetails(1) == "b") OrderType.BUY else OrderType.SELL,
         price      = orderDetails(3).toInt,
         volume     = orderDetails(4).toInt,
-        instrument = InstrumentType.withName(orderDetails(2)),
-        orderTime  = System.currentTimeMillis(),
+        instrument = InstrumentType.withName(orderDetails(2))
       )
     })
 
